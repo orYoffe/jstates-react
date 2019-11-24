@@ -1,0 +1,34 @@
+{
+  "name": "jstates-react",
+  "version": "0.1.0",
+  "description": "JStates React - A subscribe function to use JStates state library",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/orYoffe/jstates-react.git"
+  },
+  "keywords": [
+    "state",
+    "nodejs",
+    "backend",
+    "states",
+    "react",
+    "native",
+    "web",
+    "react-native",
+    "react-native-web"
+  ],
+  "author": {
+    "name": "Or Yoffe",
+    "url": "https://github.com/orYoffe"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/orYoffe/jstates-react/issues"
+  },
+  "homepage": "https://github.com/orYoffe/jstates-react#readme",
+  "dependencies": {
+    "jstates": "^0.x.x"
+  }
+}
