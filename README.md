@@ -1,6 +1,12 @@
+<div align="center">
+  <br><br><br><br><br>
+  <img src="https://raw.githubusercontent.com/oryoffe/jstates-react/master/jstates.png" alt="jstates Logo" width="400">
+  <br><br><br><br><br><br><br><br>
+</div>
+
 # JStates for React.js
 
-[JStates Library](https://github.com/orYoffe/jstates)
+[The code JStates Library](https://github.com/orYoffe/jstates)
 
 [JStates](https://github.com/orYoffe/jstates) React - A subscribe function to use [JStates](https://github.com/orYoffe/jstates) state library
 

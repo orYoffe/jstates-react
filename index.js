@@ -1,5 +1,5 @@
 import React, { PureComponent } from "react";
-import State from "jstates";
+export const State = require("jstates");
 
 export function subscribe(
   Compt,
@@ -19,11 +19,10 @@ export function subscribe(
   }
 
   return class Subscribe extends PureComponent {
-    mounted = true;
-
     constructor(props) {
       super(props);
 
+      this.mounted = true;
       this.onUpdate = this.onUpdate.bind(this);
       statesToSubscribeTo.forEach(state => {
         state.subscribe(this.onUpdate);
@@ -52,9 +51,9 @@ export function subscribe(
       });
     }
 
-    onUpdate(keysChanged) {
+    onUpdate() {
       return new Promise(resolve => {
-        if (this.mounted && keysChanged.find(i => this.keys.indexOf(i) > -1)) {
+        if (this.mounted) {
           this.setState(this.generateState(), resolve);
         } else {
           resolve();
@@ -68,6 +67,4 @@ export function subscribe(
   };
 }
 
-module.exports = { State, subscribe };
-module.exports.State = State;
-module.exports.subscribe = subscribe;
+export default { State, subscribe };

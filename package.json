@@ -1,9 +1,13 @@
 {
   "name": "jstates-react",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "JStates React - A subscribe function to use JStates state library",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "jest",
+    "test-watch": "jest --watch",
+    "precommit": "npm run test"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/orYoffe/jstates-react.git"
@@ -30,5 +34,17 @@
   "homepage": "https://github.com/orYoffe/jstates-react#readme",
   "dependencies": {
     "jstates": "^0.x.x"
+  },
+  "peerDependencies": {
+    "react": "^15.0.0 || ^16.0.0"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.7.4",
+    "@babel/preset-react": "^7.7.4",
+    "babel-jest": "^24.9.0",
+    "husky": "^3.1.0",
+    "jest": "^24.9.0",
+    "react": "^16.12.0",
+    "react-test-renderer": "^16.12.0"
   }
 }
