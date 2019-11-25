@@ -39,10 +39,12 @@ export default counterState;
 ```js
 // Counter.js
 import React from "react";
-import { subscribe } from "jstates-react";
 import counterState from "./counterState";
 
-function Counter({ addOne, removeOne }) {
+const addOne = () => counterState.setState(state => ({ count: ++state.count }));
+const removeOne = () => counterState.setState(state => ({ count: --state.count }))
+
+function Counter() {
   return (
     <>
       <p>Counter</p>
@@ -56,12 +58,7 @@ function Counter({ addOne, removeOne }) {
   );
 }
 
-const mapStates = ({ counterState }) => ({
-  addOne: () => counterState.setState(state => ({ count: ++state.count })),
-  removeOne: () => counterState.setState(state => ({ count: --state.count }))
-});
-
-export default subscribe(Counter, [counterState], mapStates);
+export default Counter;
 ```
 
 ```js
