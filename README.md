@@ -78,7 +78,7 @@ function App({ counter }) {
 }
 
 const mapStates = ({ counterState }) => ({
-  counter: () => counterState.state.counter
+  counter: counterState.state.counter
 });
 
 export default subscribe(App, [counterState], mapStates);
