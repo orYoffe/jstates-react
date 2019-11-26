@@ -323,4 +323,135 @@ describe("jstates-react", () => {
       });
     });
   });
+
+  describe("performance", () => {
+    const extractValuesFromStates = states => {
+      const values = [];
+      Object.keys(states).forEach(key => {
+        const i = states[key];
+        Object.keys(i).forEach(key2 => {
+          values.push(i[key2]);
+        });
+      });
+      return values;
+    };
+
+    const createStatesAndSubscribers = howMany => {
+      // create states
+      const states = new Array(howMany).fill(null).map((d, i) => {
+        const initialState = { count: 0 };
+        for (let index = 0; index < howMany; index++) {
+          initialState[`prop${index}`] = Math.random();
+        }
+        return new State(`state${i}`, initialState);
+      });
+
+      // create subscribers
+      // and subscribe each component to all states
+      const onUpdateSpies = [];
+      const renderSpies = [];
+      const components = new Array(howMany).fill(null).map((d, index) => {
+        const Counter = ({ num, ...rest }) => {
+          return (
+            <div test-id="item">
+              {num}
+              {extractValuesFromStates(rest)}
+            </div>
+          );
+        };
+        const SubscribedCounter = subscribe(Counter, states, (props = {}) => ({
+          num: "num",
+          ...props
+        }));
+        onUpdateSpies.push(jest.spyOn(SubscribedCounter.prototype, "onUpdate"));
+        renderSpies.push(jest.spyOn(SubscribedCounter.prototype, "render"));
+        return <SubscribedCounter key={`Counter${index}`} />;
+      });
+
+      return {
+        states,
+        onUpdateSpies,
+        renderSpies,
+        components
+      };
+    };
+
+    it("states times subscribers plus setState for each state", () => {
+      const t0 = performance.now();
+      const howMany = 50; // don't go over 50, it starts being slow
+      const {
+        states,
+        onUpdateSpies,
+        renderSpies,
+        components
+      } = createStatesAndSubscribers(howMany);
+
+      let wrapper;
+      function App() {
+        return <span test-id="wrapper">{components}</span>;
+      }
+      wrapper = renderer.create(<App />);
+      const items = wrapper.root.findAllByProps({ "test-id": "item" });
+      const propsValues = extractValuesFromStates(states.map(i => i.state));
+
+      expect(items).toHaveLength(howMany);
+      items.forEach(i => {
+        expect(i.props).toEqual({
+          children: ["num", propsValues],
+          "test-id": "item"
+        });
+      });
+
+      onUpdateSpies.forEach(onUpdate =>
+        expect(onUpdate).toHaveBeenCalledTimes(0)
+      );
+      renderSpies.forEach(render => expect(render).toHaveBeenCalledTimes(1));
+
+      // create new state
+      const newState = {};
+      for (let index = 0; index < howMany; index++) {
+        newState[`newProp${index}`] = Math.random();
+      }
+
+      // call each setState on each state
+      return Promise.all(states.map(state => state.setState(newState))).then(
+        () => {
+          const t1 = performance.now();
+          expect(parseInt(t1 - t0, 10)).toBeLessThan(howMany ** howMany * 4);
+          console.log(
+            "\x1b[36m",
+            "*** Creating ",
+            "\x1b[32m",
+            howMany,
+            "\x1b[36m",
+            " states with each having",
+            "\x1b[32m",
+            howMany,
+            "\x1b[36m",
+            " subscribers and calling setState on each and having them update took ",
+            "\x1b[35m",
+            parseInt(t1 - t0, 10),
+            "\x1b[36m",
+            "milliseconds.",
+            "\x1b[0m"
+          );
+          const items = wrapper.root.findAllByProps({ "test-id": "item" });
+          const propsValues = extractValuesFromStates(states.map(i => i.state));
+          items.forEach(i => {
+            expect(i.props).toEqual({
+              children: ["num", propsValues],
+              "test-id": "item"
+            });
+          });
+
+          onUpdateSpies.forEach(onUpdate =>
+            expect(onUpdate).toHaveBeenCalledTimes(howMany)
+          );
+          renderSpies.forEach(render =>
+            expect(render).toHaveBeenCalledTimes(howMany + 1)
+          );
+        }
+      );
+    });
+  });
 });
