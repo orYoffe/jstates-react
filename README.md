@@ -127,3 +127,69 @@ subscribe(Component, [someState], mapStatesToProps, stateKeysToListenTo);
 ```
 
 [Check out multiple states in the Jstates project](https://github.com/orYoffe/jstates)
+
+## Advanced (no need until you have performance issues) Multiple states
+
+It is recommended in order to separate your renders,
+to use multiple states to minimize the components that would be called on update
+
+```js
+const initialState = {
+  counter: 0,
+  unrelated: "value"
+};
+const counterState = new State("counterState", initialState);
+
+const addOne = () =>
+  counterState.setState(state => ({
+    counter: ++state.counter
+  }));
+const removeOne = () =>
+  counterState.setState(state => ({
+    counter: --state.counter
+  }));
+
+// Counter would get called only once
+function Counter() {
+  return (
+    <>
+      <button onClick={addOne}>add one +</button>
+      <button onClick={removeOne}>remove one -</button>
+    </>
+  );
+}
+
+// Counter would get called only when counter property changes
+function CountDisplay({ counter }) {
+  return <p>Current counter: {counter}</p>;
+}
+const mapStates = ({ counterState }) => ({
+  counter: counterState.counter
+});
+
+const SubscribedCountDisplay = subscribe(
+  CountDisplay, // component
+  [counterState], // states to subscribe to
+  mapStatesToProps, // maps the states to component props
+  ["counter"] // state keys to update only if they changed
+);
+
+// UpdatesAlways would get called on every state change
+// it subscribes to the counterState updates and not to a specific property
+function UpdatesAlways({ counterState }) {
+  ++updatesCountAlways;
+  return <p>Current state: {JSON.stringify(counterState)}</p>;
+}
+const SubscribedUpdatesAlways = subscribe(UpdatesAlways, [counterState]);
+
+// App would get called only once
+function App({ counter }) {
+  return (
+    <>
+      <SubscribedCountDisplay />
+      <Counter />
+      <SubscribedUpdatesAlways />
+    </>
+  );
+}
+```
