@@ -38,6 +38,7 @@ describe("jstates-react", () => {
     const name = "newState";
     const initialState = { fake: "value" };
     const newState = new State(name, initialState);
+    const otherprops = { other: "props" };
 
     it("with mapStates", () => {
       const SubscriberComponent = jest.fn(({ fake }) => <p>{fake}</p>);
@@ -45,56 +46,140 @@ describe("jstates-react", () => {
         SubscriberComponent,
         [newState],
         ({ newState }) => ({
-          fake: newState.state.fake
+          fake: newState.fake
         })
       );
-      const component = renderer.create(<SubscribedComponent />);
+      const component = renderer.create(
+        <SubscribedComponent {...otherprops} />
+      );
 
-      expect(component.root.findByType(SubscriberComponent).props).toEqual({
-        fake: newState.state.fake
-      });
+      const props = {
+        fake: newState.state.fake,
+        ...otherprops
+      };
+      expect(SubscriberComponent).toHaveBeenCalledTimes(1);
+      expect(SubscriberComponent).toHaveBeenCalledWith(props, {});
+      expect(component.root.findByType(SubscriberComponent).props).toEqual(
+        props
+      );
       expect(component.root.findByType("p").children).toEqual([
         newState.state.fake
       ]);
 
-      newState.setState({ fake: "new value" });
+      jest.clearAllMocks();
+      return newState.setState({ fake: "new value" }).then(() => {
+        const newprops = {
+          fake: newState.state.fake,
+          ...otherprops
+        };
+        expect(component.root.findByType(SubscriberComponent).props).toEqual(
+          newprops
+        );
+        expect(component.root.findByType("p").children).toEqual([
+          newState.state.fake
+        ]);
 
-      expect(component.root.findByType(SubscriberComponent).props).toEqual({
-        fake: newState.state.fake
+        expect(SubscriberComponent).toHaveBeenCalledTimes(1);
+        expect(SubscriberComponent).toHaveBeenCalledWith(newprops, {});
       });
-      expect(component.root.findByType("p").children).toEqual([
-        newState.state.fake
-      ]);
     });
 
     it("without mapStates", () => {
       const SubscriberComponent = jest.fn(({ newState }) => (
-        <p>{newState.state.fake}</p>
+        <p>{newState.fake}</p>
       ));
       const SubscribedComponent = subscribe(SubscriberComponent, [newState]);
-      const component = renderer.create(<SubscribedComponent />);
+      const component = renderer.create(
+        <SubscribedComponent {...otherprops} />
+      );
 
+      const props = {
+        newState: newState.state,
+        ...otherprops
+      };
+      expect(SubscriberComponent).toHaveBeenCalledTimes(1);
+      expect(SubscriberComponent).toHaveBeenCalledWith(props, {});
       expect(
-        component.root.findByType(SubscriberComponent).props.newState.state
+        component.root.findByType(SubscriberComponent).props.newState
       ).toEqual(newState.state);
-      expect(
-        component.root.findByType(SubscriberComponent).props.newState.setState
-      ).toEqual(newState.setState);
       expect(component.root.findByType("p").children).toEqual([
         newState.state.fake
       ]);
 
-      newState.setState({ fake: "new value 2" });
+      jest.clearAllMocks();
+      return newState.setState({ fake: "new value 2" }).then(() => {
+        const props = {
+          newState: newState.state,
+          ...otherprops
+        };
+        expect(SubscriberComponent).toHaveBeenCalledTimes(1);
+        expect(SubscriberComponent).toHaveBeenCalledWith(props, {});
+        expect(
+          component.root.findByType(SubscriberComponent).props.newState
+        ).toEqual(newState.state);
+        expect(component.root.findByType("p").children).toEqual([
+          newState.state.fake
+        ]);
+      });
+    });
 
-      expect(
-        component.root.findByType(SubscriberComponent).props.newState.state
-      ).toEqual(newState.state);
-      expect(
-        component.root.findByType(SubscriberComponent).props.newState.setState
-      ).toEqual(newState.setState);
+    it("with stateKeysToListenTo", () => {
+      newState.setState({ different: "value" });
+      const SubscriberComponent = jest.fn(({ fake }) => <p>{fake}</p>);
+      const SubscribedComponent = subscribe(
+        SubscriberComponent,
+        [newState],
+        ({ newState }) => ({
+          fake: newState.fake
+        }),
+        ["different"]
+      );
+      const component = renderer.create(
+        <SubscribedComponent {...otherprops} />
+      );
+
+      const oldProps = {
+        fake: newState.state.fake,
+        ...otherprops
+      };
+      expect(SubscriberComponent).toHaveBeenCalledTimes(1);
+      expect(SubscriberComponent).toHaveBeenCalledWith(oldProps, {});
+      expect(component.root.findByType(SubscriberComponent).props).toEqual(
+        oldProps
+      );
       expect(component.root.findByType("p").children).toEqual([
         newState.state.fake
       ]);
+
+      jest.clearAllMocks();
+      return newState.setState({ fake: "new value" }).then(() => {
+        expect(component.root.findByType(SubscriberComponent).props).toEqual(
+          oldProps
+        );
+        expect(component.root.findByType("p").children).toEqual([
+          oldProps.fake
+        ]);
+
+        expect(SubscriberComponent).toHaveBeenCalledTimes(0);
+
+        jest.clearAllMocks();
+        return newState.setState({ different: "new value 2" }).then(() => {
+          const props = {
+            fake: newState.state.fake,
+            ...otherprops
+          };
+          expect(SubscriberComponent).toHaveBeenCalledTimes(1);
+          expect(SubscriberComponent).toHaveBeenCalledWith(props, {});
+          expect(component.root.findByType(SubscriberComponent).props).toEqual(
+            props
+          );
+          expect(component.root.findByType("p").children).toEqual([
+            newState.state.fake
+          ]);
+          expect(SubscriberComponent).toHaveBeenCalledTimes(1);
+          expect(SubscriberComponent).toHaveBeenCalledWith(props, {});
+        });
+      });
     });
   });
 });

@@ -39,29 +39,22 @@ export default counterState;
 ```js
 // Counter.js
 import React from "react";
-import { subscribe } from "jstates-react";
 import counterState from "./counterState";
 
-function Counter({ addOne, removeOne }) {
+const addOne = () => counterState.setState(state => ({ count: ++state.count }));
+const removeOne = () =>
+  counterState.setState(state => ({ count: --state.count }));
+
+function Counter() {
   return (
     <>
-      <p>Counter</p>
-      <button onPress={addOne}>
-        <p>add one +</p>
-      </button>
-      <button onPress={removeOne}>
-        <p>remove one -</p>
-      </button>
+      <button onPress={addOne}>add one +</button>
+      <button onPress={removeOne}>remove one -</button>
     </>
   );
 }
 
-const mapStates = ({ counterState }) => ({
-  addOne: () => counterState.setState(state => ({ count: ++state.count })),
-  removeOne: () => counterState.setState(state => ({ count: --state.count }))
-});
-
-export default subscribe(Counter, [counterState], mapStates);
+export default Counter;
 ```
 
 ```js
@@ -80,12 +73,57 @@ function App({ counter }) {
   );
 }
 
-const mapStates = ({ counterState }) => ({
-  counter: () => counterState.state.counter
+const mapStatesToProps = ({ counterState }) => ({
+  counter: () => counterState.counter
 });
 
-export default subscribe(App, [counterState], mapStates);
+export default subscribe(App, [counterState], mapStatesToProps);
 ```
 
-\*\* `subscribe` can also be used without a `mapStates` function.
+### `subscribe` options
+
+#### Minimal requirement
+
+`subscribe` can be called with a component and an array with at least one jstates state instance.
 Then would get updated whatever changes are made to the states it subscribes to
+
+```js
+const someState = new State("someState", {});
+
+subscribe(Component, [someState]);
+
+// With multiple states
+const someOtherState = new State("someState", {});
+
+subscribe(Component, [someState, someOtherState]);
+```
+
+#### `mapStatesToProps`
+
+`subscribe` can be called with an additional function to map the states it subscribes to
+into the props of the component. This pattern can be seen also in libraries like react-redux and is easy to test
+
+```js
+const mapStatesToProps = ({ counterState }) => ({
+  counter: () => counterState.counter
+});
+
+subscribe(Component, [someState], mapStatesToProps);
+```
+
+#### stateKeysToListenTo
+
+`subscribe` can be called with an additional array of state keys.
+Then the component would be updated only if one of those keys changed in the state
+
+```js
+const stateKeysToListenTo = ["counter"];
+
+// Without mapStatesToProps
+subscribe(Component, [someState], null, stateKeysToListenTo);
+
+// With mapStatesToProps
+subscribe(Component, [someState], mapStatesToProps, stateKeysToListenTo);
+```
+
+[Check out multiple states in the Jstates project](https://github.com/orYoffe/jstates)

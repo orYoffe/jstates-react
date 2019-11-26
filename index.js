@@ -4,7 +4,8 @@ export const State = require("jstates");
 export function subscribe(
   Compt,
   statesToSubscribeTo = [],
-  mapStatesToProps = f => f
+  mapStatesToProps = f => f,
+  stateKeysToListenTo = []
 ) {
   if (!Compt) {
     throw new Error(
@@ -28,17 +29,12 @@ export function subscribe(
         state.subscribe(this.onUpdate);
       });
       this.state = this.generateState();
-      this.keys = Object.keys(this.state);
     }
 
     generateState() {
       const subscribedStates = {};
-      statesToSubscribeTo.forEach(function extractState({
-        name,
-        state,
-        setState
-      }) {
-        subscribedStates[name] = { state, setState };
+      statesToSubscribeTo.forEach(function extractState({ name, state }) {
+        subscribedStates[name] = state;
       });
 
       return mapStatesToProps(subscribedStates);
@@ -51,9 +47,17 @@ export function subscribe(
       });
     }
 
-    onUpdate() {
+    onUpdate(keysChanged = []) {
       return new Promise(resolve => {
         if (this.mounted) {
+          if (
+            !keysChanged.length ||
+            (stateKeysToListenTo.length &&
+              !stateKeysToListenTo.find(key => keysChanged.indexOf(key) > -1))
+          ) {
+            resolve();
+            return;
+          }
           this.setState(this.generateState(), resolve);
         } else {
           resolve();
