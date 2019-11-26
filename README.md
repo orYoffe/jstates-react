@@ -74,7 +74,7 @@ function App({ counter }) {
 }
 
 const mapStatesToProps = ({ counterState }) => ({
-  counter: () => counterState.counter
+  counter: counterState.counter
 });
 
 export default subscribe(App, [counterState], mapStatesToProps);
@@ -105,7 +105,7 @@ into the props of the component. This pattern can be seen also in libraries like
 
 ```js
 const mapStatesToProps = ({ counterState }) => ({
-  counter: () => counterState.counter
+  counter: counterState.counter
 });
 
 subscribe(Component, [someState], mapStatesToProps);
