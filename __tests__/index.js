@@ -40,6 +40,18 @@ describe("jstates-react", () => {
     const newState = new State(name, initialState);
     const otherprops = { other: "props" };
 
+    it("should throw an error when called without a component", () => {
+      expect(() => subscribe()).toThrow(
+        "subscribe was called without a component or callback. subscribe(Component | callback, [statesToSubscribeTo], mapStatesToProps)"
+      );
+    });
+
+    it("should throw an error when called without statesToSubscribeTo", () => {
+      expect(() => subscribe(true)).toThrow(
+        "subscribe was called without states to subscribe to. subscribe(Component, [statesToSubscribeTo], mapStatesToProps)"
+      );
+    });
+
     it("with mapStates", () => {
       const SubscriberComponent = jest.fn(({ fake }) => <p>{fake}</p>);
       const SubscribedComponent = subscribe(
@@ -179,6 +191,135 @@ describe("jstates-react", () => {
           expect(SubscriberComponent).toHaveBeenCalledTimes(1);
           expect(SubscriberComponent).toHaveBeenCalledWith(props, {});
         });
+      });
+    });
+  });
+
+  it("integration", () => {
+    const otherprops = { other: "props" };
+    const initialState = {
+      counter: 0,
+      unrelated: "value"
+    };
+    const counterState = new State("counterState", initialState);
+
+    const addOne = () =>
+      counterState.setState(state => ({
+        counter: ++state.counter
+      }));
+    const removeOne = () =>
+      counterState.setState(state => ({
+        counter: --state.counter
+      }));
+
+    let updatesCountCounter = 0;
+    function Counter() {
+      ++updatesCountCounter;
+      return (
+        <>
+          <button test-id="add" onClick={addOne}>
+            add one +
+          </button>
+          <button test-id="remove" onClick={removeOne}>
+            remove one -
+          </button>
+        </>
+      );
+    }
+
+    let updatesCountDisplay = 0;
+    function CountDisplay({ counter }) {
+      ++updatesCountDisplay;
+      return <p test-id="count">Current counter: {counter}</p>;
+    }
+    const mapStates = ({ counterState }) => ({
+      counter: counterState.counter
+    });
+
+    const SubscribedCountDisplay = subscribe(
+      CountDisplay,
+      [counterState],
+      mapStates,
+      ["counter"]
+    );
+
+    let updatesCountAlways = 0;
+    function UpdatesAlways({ counterState }) {
+      ++updatesCountAlways;
+      return (
+        <p test-id="always-count">
+          Current state: {JSON.stringify(counterState)}
+        </p>
+      );
+    }
+    const SubscribedUpdatesAlways = subscribe(UpdatesAlways, [counterState]);
+
+    let updatesCountApp = 0;
+    function App({ counter }) {
+      ++updatesCountApp;
+      return (
+        <>
+          <SubscribedCountDisplay />
+          <Counter />
+          <SubscribedUpdatesAlways />
+        </>
+      );
+    }
+
+    const component = renderer.create(<App {...otherprops} />);
+
+    const getElementByTestId = id =>
+      component.root.findByProps({ "test-id": id });
+
+    const alwaysCount = getElementByTestId("always-count");
+    const count = getElementByTestId("count");
+    const add = getElementByTestId("add");
+    const remove = getElementByTestId("remove");
+
+    expect(updatesCountDisplay).toEqual(1);
+    expect(updatesCountCounter).toEqual(1);
+    expect(updatesCountAlways).toEqual(1);
+    expect(updatesCountApp).toEqual(1);
+    expect(count.children).toEqual(["Current counter: ", "0"]);
+    expect(alwaysCount.children).toEqual([
+      "Current state: ",
+      '{"counter":0,"unrelated":"value"}'
+    ]);
+    return add.props.onClick().then(() => {
+      expect(updatesCountCounter).toEqual(1);
+      expect(updatesCountAlways).toEqual(2);
+      expect(updatesCountDisplay).toEqual(2);
+      expect(updatesCountApp).toEqual(1);
+      expect(count.children).toEqual(["Current counter: ", "1"]);
+      expect(alwaysCount.children).toEqual([
+        "Current state: ",
+        '{"counter":1,"unrelated":"value"}'
+      ]);
+
+      return remove.props.onClick().then(() => {
+        expect(updatesCountCounter).toEqual(1);
+        expect(updatesCountAlways).toEqual(3);
+        expect(updatesCountDisplay).toEqual(3);
+        expect(updatesCountApp).toEqual(1);
+        expect(count.children).toEqual(["Current counter: ", "0"]);
+        expect(alwaysCount.children).toEqual([
+          "Current state: ",
+          '{"counter":0,"unrelated":"value"}'
+        ]);
+
+        return counterState
+          .setState({ otherValue: "somethig different" })
+          .then(() => {
+            expect(updatesCountCounter).toEqual(1);
+            expect(updatesCountAlways).toEqual(4);
+            expect(updatesCountDisplay).toEqual(3);
+            expect(updatesCountApp).toEqual(1);
+            expect(count.children).toEqual(["Current counter: ", "0"]);
+            expect(alwaysCount.children).toEqual([
+              "Current state: ",
+              '{"counter":0,"unrelated":"value","otherValue":"somethig different"}'
+            ]);
+          });
       });
     });
   });

@@ -41,15 +41,15 @@ export default counterState;
 import React from "react";
 import counterState from "./counterState";
 
-const addOne = () => counterState.setState(state => ({ count: ++state.count }));
+const addOne = () =>
+  counterState.setState(state => ({ counter: ++state.counter }));
 const removeOne = () =>
-  counterState.setState(state => ({ count: --state.count }));
-
+  counterState.setState(state => ({ counter: --state.counter }));
 function Counter() {
   return (
     <>
-      <button onPress={addOne}>add one +</button>
-      <button onPress={removeOne}>remove one -</button>
+      <button onClick={addOne}>add one +</button>
+      <button onClick={removeOne}>remove one -</button>
     </>
   );
 }
