@@ -6,7 +6,7 @@
 
 # JStates for React.js
 
-[The code JStates Library](https://github.com/orYoffe/jstates)
+[The core JStates Library](https://github.com/orYoffe/jstates)
 
 [JStates](https://github.com/orYoffe/jstates) React - A subscribe function to use [JStates](https://github.com/orYoffe/jstates) state library
 
