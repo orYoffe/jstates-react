@@ -1,10 +1,8 @@
 {
   "name": "jstates-react",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "JStates React - A subscribe function to use JStates state library",
   "main": "dist/index.js",
-  "module": "index.js",
-  "jsnext:main": "index.js",
   "scripts": {
     "test": "jest",
     "test-watch": "jest --watch",
@@ -36,7 +34,7 @@
   },
   "homepage": "https://github.com/orYoffe/jstates-react#readme",
   "dependencies": {
-    "jstates": "^0.x.x"
+    "jstates": "^0.1.x"
   },
   "peerDependencies": {
     "react": "^15.0.0 || ^16.0.0"
