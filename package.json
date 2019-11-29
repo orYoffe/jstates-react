@@ -1,6 +1,6 @@
 {
   "name": "jstates-react",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "JStates React - A subscribe function to use JStates state library",
   "main": "dist/index.js",
   "module": "index.js",
