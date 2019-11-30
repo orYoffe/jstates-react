@@ -70,5 +70,3 @@ export function subscribe(
     }
   };
 }
-
-export default { State, subscribe };

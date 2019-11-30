@@ -196,6 +196,7 @@ describe("jstates-react", () => {
   });
 
   it("integration", () => {
+    const unsubscribeSpy = jest.spyOn(State.prototype, "unsubscribe");
     const otherprops = { other: "props" };
     const initialState = {
       counter: 0,
@@ -255,7 +256,7 @@ describe("jstates-react", () => {
     const SubscribedUpdatesAlways = subscribe(UpdatesAlways, [counterState]);
 
     let updatesCountApp = 0;
-    function App({ counter }) {
+    function App() {
       ++updatesCountApp;
       return (
         <>
@@ -266,7 +267,7 @@ describe("jstates-react", () => {
       );
     }
 
-    const component = renderer.create(<App {...otherprops} />);
+    let component = renderer.create(<App {...otherprops} />);
 
     const getElementByTestId = id =>
       component.root.findByProps({ "test-id": id });
@@ -319,6 +320,11 @@ describe("jstates-react", () => {
               "Current state: ",
               '{"counter":0,"unrelated":"value","otherValue":"somethig different"}'
             ]);
+
+            // unmounting should unsubcscribe
+            component.update(null);
+            expect(unsubscribeSpy).toHaveBeenCalledTimes(2);
+            expect(counterState.subscribers).toHaveLength(0);
           });
       });
     });
