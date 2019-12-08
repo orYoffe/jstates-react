@@ -10,6 +10,10 @@
 
 [JStates](https://github.com/orYoffe/jstates) React - A subscribe function to use [JStates](https://github.com/orYoffe/jstates) state library
 
+
+[jstates-react Todo app example](https://github.com/orYoffe/jstates-react-todo-example)
+[codesandbox jstates-react example](https://codesandbox.io/s/jstates-react-93uhx)
+
 [![NPM](https://nodei.co/npm/jstates-react.png)](https://npmjs.org/package/jstates-react)
 
 ![GitHub issues](https://img.shields.io/github/issues/orYoffe/jstates-react.svg)
