@@ -12,6 +12,7 @@
 
 
 [jstates-react Todo app example](https://github.com/orYoffe/jstates-react-todo-example)
+<br>
 [codesandbox jstates-react example](https://codesandbox.io/s/jstates-react-93uhx)
 
 [![NPM](https://nodei.co/npm/jstates-react.png)](https://npmjs.org/package/jstates-react)
