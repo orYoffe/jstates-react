@@ -10,7 +10,6 @@
 
 [JStates](https://github.com/orYoffe/jstates) React - A subscribe function to use [JStates](https://github.com/orYoffe/jstates) state library
 
-
 [jstates-react Todo app example](https://github.com/orYoffe/jstates-react-todo-example)
 <br>
 [codesandbox jstates-react example](https://codesandbox.io/s/jstates-react-93uhx)
@@ -131,7 +130,7 @@ subscribe(Component, [someState], null, stateKeysToListenTo);
 subscribe(Component, [someState], mapStatesToProps, stateKeysToListenTo);
 ```
 
-[Check out multiple states in the Jstates project](https://github.com/orYoffe/jstates)
+[Check out additional examples on middleware, debugging and multiple states in the Jstates project](https://github.com/orYoffe/jstates)
 
 ## Advanced (no need until you have performance issues) Multiple states
 
