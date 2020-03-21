@@ -130,7 +130,7 @@ subscribe(Component, [someState], null, stateKeysToListenTo);
 subscribe(Component, [someState], mapStatesToProps, stateKeysToListenTo);
 ```
 
-[Check out additional examples on middleware, debugging and multiple states in the Jstates project](https://github.com/orYoffe/jstates)
+[Check out additional examples on debugging and multiple states in the Jstates project](https://github.com/orYoffe/jstates)
 
 ## Advanced (no need until you have performance issues) Multiple states
 
