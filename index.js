@@ -1,11 +1,10 @@
 import React, { PureComponent } from "react";
-export const State = require("jstates");
+export const createState = require("jstates");
 
 export function subscribe(
   Compt,
-  statesToSubscribeTo = [],
-  mapStatesToProps = f => f,
-  stateKeysToListenTo = []
+  statesToSubscribeTo,
+  mapStatesToProps = (states) => ({ states })
 ) {
   if (!Compt) {
     throw new Error(
@@ -13,11 +12,12 @@ export function subscribe(
     );
   }
 
-  if (statesToSubscribeTo.length < 1) {
+  if (!statesToSubscribeTo) {
     throw new Error(
       "subscribe was called without states to subscribe to. subscribe(Component, [statesToSubscribeTo], mapStatesToProps)"
     );
   }
+  const hasMultipleStates = Array.isArray(statesToSubscribeTo);
 
   return class Subscribe extends PureComponent {
     constructor(props) {
@@ -25,39 +25,38 @@ export function subscribe(
 
       this.mounted = true;
       this.onUpdate = this.onUpdate.bind(this);
-      statesToSubscribeTo.forEach(state => {
-        state.subscribe(this.onUpdate);
-      });
+      if (hasMultipleStates) {
+        statesToSubscribeTo.forEach((state) => {
+          state.subscribe(this.onUpdate);
+        });
+      } else {
+        statesToSubscribeTo.subscribe(this.onUpdate);
+      }
       this.state = this.generateState();
     }
 
     generateState() {
-      const subscribedStates = {};
-      statesToSubscribeTo.forEach(function extractState({ name, state }) {
-        subscribedStates[name] = state;
-      });
-
-      return mapStatesToProps(subscribedStates);
+      if (hasMultipleStates)
+        return mapStatesToProps(
+          ...statesToSubscribeTo.map((i) => i.getState())
+        );
+      return mapStatesToProps(statesToSubscribeTo.getState());
     }
 
     componentWillUnmount() {
       this.mounted = false;
-      statesToSubscribeTo.forEach(state => {
-        state.unsubscribe(this.onUpdate);
-      });
+      if (hasMultipleStates) {
+        statesToSubscribeTo.forEach((state) => {
+          state.unsubscribe(this.onUpdate);
+        });
+      } else {
+        statesToSubscribeTo.unsubscribe(this.onUpdate);
+      }
     }
 
-    onUpdate(keysChanged = []) {
-      return new Promise(resolve => {
+    onUpdate() {
+      return new Promise((resolve) => {
         if (this.mounted) {
-          if (
-            !keysChanged.length ||
-            (stateKeysToListenTo.length &&
-              !stateKeysToListenTo.find(key => keysChanged.indexOf(key) > -1))
-          ) {
-            resolve();
-            return;
-          }
           this.setState(this.generateState(), resolve);
         } else {
           resolve();

@@ -1,43 +1,34 @@
 import React from "react";
 import renderer from "react-test-renderer";
-const { State, subscribe } = require("../index");
+const { createState, subscribe } = require("../index");
 
 describe("jstates-react", () => {
   describe("State", () => {
-    it("should throw an error when created without name", () => {
-      expect(() => new State()).toThrow(
-        "State was not given a name. new State(name, initialState)"
-      );
-    });
-
     it("should initialize with name, state and subscribers", () => {
-      const name = "newState";
       const initialState = { fake: "value" };
-      const state = new State(name, initialState);
+      const state = createState(initialState);
 
-      expect(state.name).toEqual(name);
-      expect(state.state).toEqual(initialState);
+      expect(state.getState()).toEqual(initialState);
     });
 
-    it("should change state and call subscribed functions with the changed keys when state changes", () => {
+    it("should change state and call subscribed functions when state changes", () => {
       const name = "newState";
       const initialState = { fake: "value" };
-      const state = new State(name, initialState);
+      const state = createState(initialState);
       const subscriber = jest.fn();
       state.subscribe(subscriber);
       const newState = { fake: "value", some: "new value" };
 
       return state.setState(newState).then(() => {
-        expect(state.state).toEqual(newState);
-        expect(subscriber).toHaveBeenCalledWith(Object.keys(newState));
+        expect(state.getState()).toEqual(newState);
+        expect(subscriber).toHaveBeenCalledTimes(1);
       });
     });
   });
 
   describe("subscribe", () => {
-    const name = "newState";
     const initialState = { fake: "value" };
-    const newState = new State(name, initialState);
+    const newState = createState(initialState);
     const otherprops = { other: "props" };
 
     it("should throw an error when called without a component", () => {
@@ -56,9 +47,9 @@ describe("jstates-react", () => {
       const SubscriberComponent = jest.fn(({ fake }) => <p>{fake}</p>);
       const SubscribedComponent = subscribe(
         SubscriberComponent,
-        [newState],
-        ({ newState }) => ({
-          fake: newState.fake
+        newState,
+        (newState) => ({
+          fake: newState.fake,
         })
       );
       const component = renderer.create(
@@ -66,8 +57,8 @@ describe("jstates-react", () => {
       );
 
       const props = {
-        fake: newState.state.fake,
-        ...otherprops
+        fake: newState.getState().fake,
+        ...otherprops,
       };
       expect(SubscriberComponent).toHaveBeenCalledTimes(1);
       expect(SubscriberComponent).toHaveBeenCalledWith(props, {});
@@ -75,20 +66,20 @@ describe("jstates-react", () => {
         props
       );
       expect(component.root.findByType("p").children).toEqual([
-        newState.state.fake
+        newState.getState().fake,
       ]);
 
       jest.clearAllMocks();
       return newState.setState({ fake: "new value" }).then(() => {
         const newprops = {
-          fake: newState.state.fake,
-          ...otherprops
+          fake: newState.getState().fake,
+          ...otherprops,
         };
         expect(component.root.findByType(SubscriberComponent).props).toEqual(
           newprops
         );
         expect(component.root.findByType("p").children).toEqual([
-          newState.state.fake
+          newState.getState().fake,
         ]);
 
         expect(SubscriberComponent).toHaveBeenCalledTimes(1);
@@ -97,120 +88,59 @@ describe("jstates-react", () => {
     });
 
     it("without mapStates", () => {
-      const SubscriberComponent = jest.fn(({ newState }) => (
-        <p>{newState.fake}</p>
-      ));
-      const SubscribedComponent = subscribe(SubscriberComponent, [newState]);
+      const SubscriberComponent = jest.fn(({ states }) => <p>{states.fake}</p>);
+      const SubscribedComponent = subscribe(SubscriberComponent, newState);
       const component = renderer.create(
         <SubscribedComponent {...otherprops} />
       );
 
       const props = {
-        newState: newState.state,
-        ...otherprops
+        states: newState.getState(),
+        ...otherprops,
       };
       expect(SubscriberComponent).toHaveBeenCalledTimes(1);
       expect(SubscriberComponent).toHaveBeenCalledWith(props, {});
       expect(
-        component.root.findByType(SubscriberComponent).props.newState
-      ).toEqual(newState.state);
+        component.root.findByType(SubscriberComponent).props.states
+      ).toEqual(newState.getState());
       expect(component.root.findByType("p").children).toEqual([
-        newState.state.fake
+        newState.getState().fake,
       ]);
 
       jest.clearAllMocks();
       return newState.setState({ fake: "new value 2" }).then(() => {
         const props = {
-          newState: newState.state,
-          ...otherprops
+          states: newState.getState(),
+          ...otherprops,
         };
         expect(SubscriberComponent).toHaveBeenCalledTimes(1);
         expect(SubscriberComponent).toHaveBeenCalledWith(props, {});
         expect(
-          component.root.findByType(SubscriberComponent).props.newState
-        ).toEqual(newState.state);
+          component.root.findByType(SubscriberComponent).props.states
+        ).toEqual(newState.getState());
         expect(component.root.findByType("p").children).toEqual([
-          newState.state.fake
+          newState.getState().fake,
         ]);
-      });
-    });
-
-    it("with stateKeysToListenTo", () => {
-      newState.setState({ different: "value" });
-      const SubscriberComponent = jest.fn(({ fake }) => <p>{fake}</p>);
-      const SubscribedComponent = subscribe(
-        SubscriberComponent,
-        [newState],
-        ({ newState }) => ({
-          fake: newState.fake
-        }),
-        ["different"]
-      );
-      const component = renderer.create(
-        <SubscribedComponent {...otherprops} />
-      );
-
-      const oldProps = {
-        fake: newState.state.fake,
-        ...otherprops
-      };
-      expect(SubscriberComponent).toHaveBeenCalledTimes(1);
-      expect(SubscriberComponent).toHaveBeenCalledWith(oldProps, {});
-      expect(component.root.findByType(SubscriberComponent).props).toEqual(
-        oldProps
-      );
-      expect(component.root.findByType("p").children).toEqual([
-        newState.state.fake
-      ]);
-
-      jest.clearAllMocks();
-      return newState.setState({ fake: "new value" }).then(() => {
-        expect(component.root.findByType(SubscriberComponent).props).toEqual(
-          oldProps
-        );
-        expect(component.root.findByType("p").children).toEqual([
-          oldProps.fake
-        ]);
-
-        expect(SubscriberComponent).toHaveBeenCalledTimes(0);
-
-        jest.clearAllMocks();
-        return newState.setState({ different: "new value 2" }).then(() => {
-          const props = {
-            fake: newState.state.fake,
-            ...otherprops
-          };
-          expect(SubscriberComponent).toHaveBeenCalledTimes(1);
-          expect(SubscriberComponent).toHaveBeenCalledWith(props, {});
-          expect(component.root.findByType(SubscriberComponent).props).toEqual(
-            props
-          );
-          expect(component.root.findByType("p").children).toEqual([
-            newState.state.fake
-          ]);
-          expect(SubscriberComponent).toHaveBeenCalledTimes(1);
-          expect(SubscriberComponent).toHaveBeenCalledWith(props, {});
-        });
       });
     });
   });
 
   it("integration", () => {
-    const unsubscribeSpy = jest.spyOn(State.prototype, "unsubscribe");
     const otherprops = { other: "props" };
     const initialState = {
       counter: 0,
-      unrelated: "value"
+      unrelated: "value",
     };
-    const counterState = new State("counterState", initialState);
+    const counterState = createState(initialState);
+    const unsubscribeSpy = jest.spyOn(counterState, "unsubscribe");
 
     const addOne = () =>
-      counterState.setState(state => ({
-        counter: ++state.counter
+      counterState.setState((state) => ({
+        counter: ++state.counter,
       }));
     const removeOne = () =>
-      counterState.setState(state => ({
-        counter: --state.counter
+      counterState.setState((state) => ({
+        counter: --state.counter,
       }));
 
     let updatesCountCounter = 0;
@@ -233,27 +163,24 @@ describe("jstates-react", () => {
       ++updatesCountDisplay;
       return <p test-id="count">Current counter: {counter}</p>;
     }
-    const mapStates = ({ counterState }) => ({
-      counter: counterState.counter
+    const mapStates = (counterState) => ({
+      counter: counterState.counter,
     });
 
     const SubscribedCountDisplay = subscribe(
       CountDisplay,
       [counterState],
-      mapStates,
-      ["counter"]
+      mapStates
     );
 
     let updatesCountAlways = 0;
-    function UpdatesAlways({ counterState }) {
+    function UpdatesAlways({ states }) {
       ++updatesCountAlways;
       return (
-        <p test-id="always-count">
-          Current state: {JSON.stringify(counterState)}
-        </p>
+        <p test-id="always-count">Current state: {JSON.stringify(states)}</p>
       );
     }
-    const SubscribedUpdatesAlways = subscribe(UpdatesAlways, [counterState]);
+    const SubscribedUpdatesAlways = subscribe(UpdatesAlways, counterState);
 
     let updatesCountApp = 0;
     function App() {
@@ -269,7 +196,7 @@ describe("jstates-react", () => {
 
     let component = renderer.create(<App {...otherprops} />);
 
-    const getElementByTestId = id =>
+    const getElementByTestId = (id) =>
       component.root.findByProps({ "test-id": id });
 
     const alwaysCount = getElementByTestId("always-count");
@@ -284,7 +211,7 @@ describe("jstates-react", () => {
     expect(count.children).toEqual(["Current counter: ", "0"]);
     expect(alwaysCount.children).toEqual([
       "Current state: ",
-      '{"counter":0,"unrelated":"value"}'
+      '{"counter":0,"unrelated":"value"}',
     ]);
     return add.props.onClick().then(() => {
       expect(updatesCountCounter).toEqual(1);
@@ -294,7 +221,7 @@ describe("jstates-react", () => {
       expect(count.children).toEqual(["Current counter: ", "1"]);
       expect(alwaysCount.children).toEqual([
         "Current state: ",
-        '{"counter":1,"unrelated":"value"}'
+        '{"counter":1,"unrelated":"value"}',
       ]);
 
       return remove.props.onClick().then(() => {
@@ -305,7 +232,7 @@ describe("jstates-react", () => {
         expect(count.children).toEqual(["Current counter: ", "0"]);
         expect(alwaysCount.children).toEqual([
           "Current state: ",
-          '{"counter":0,"unrelated":"value"}'
+          '{"counter":0,"unrelated":"value"}',
         ]);
 
         return counterState
@@ -318,38 +245,37 @@ describe("jstates-react", () => {
             expect(count.children).toEqual(["Current counter: ", "0"]);
             expect(alwaysCount.children).toEqual([
               "Current state: ",
-              '{"counter":0,"unrelated":"value","otherValue":"somethig different"}'
+              '{"counter":0,"unrelated":"value","otherValue":"somethig different"}',
             ]);
 
             // unmounting should unsubcscribe
             component.update(null);
             expect(unsubscribeSpy).toHaveBeenCalledTimes(2);
-            expect(counterState.subscribers).toHaveLength(0);
           });
       });
     });
   });
 
   describe("performance", () => {
-    const extractValuesFromStates = states => {
+    const extractValuesFromStates = (states) => {
       const values = [];
-      Object.keys(states).forEach(key => {
+      Object.keys(states).forEach((key) => {
         const i = states[key];
-        Object.keys(i).forEach(key2 => {
+        Object.keys(i).forEach((key2) => {
           values.push(i[key2]);
         });
       });
       return values;
     };
 
-    const createStatesAndSubscribers = howMany => {
+    const createStatesAndSubscribers = (howMany) => {
       // create states
       const states = new Array(howMany).fill(null).map((d, i) => {
         const initialState = { count: 0 };
         for (let index = 0; index < howMany; index++) {
           initialState[`prop${index}`] = Math.random();
         }
-        return new State(`state${i}`, initialState);
+        return createState(initialState);
       });
 
       // create subscribers
@@ -365,9 +291,9 @@ describe("jstates-react", () => {
             </div>
           );
         };
-        const SubscribedCounter = subscribe(Counter, states, (props = {}) => ({
+        const SubscribedCounter = subscribe(Counter, states, (...props) => ({
           num: "num",
-          ...props
+          ...props,
         }));
         onUpdateSpies.push(jest.spyOn(SubscribedCounter.prototype, "onUpdate"));
         renderSpies.push(jest.spyOn(SubscribedCounter.prototype, "render"));
@@ -378,7 +304,7 @@ describe("jstates-react", () => {
         states,
         onUpdateSpies,
         renderSpies,
-        components
+        components,
       };
     };
 
@@ -389,7 +315,7 @@ describe("jstates-react", () => {
         states,
         onUpdateSpies,
         renderSpies,
-        components
+        components,
       } = createStatesAndSubscribers(howMany);
 
       let wrapper;
@@ -398,29 +324,31 @@ describe("jstates-react", () => {
       }
       wrapper = renderer.create(<App />);
       const items = wrapper.root.findAllByProps({ "test-id": "item" });
-      const propsValues = extractValuesFromStates(states.map(i => i.state));
+      const propsValues = extractValuesFromStates(
+        states.map((i) => i.getState())
+      );
 
       expect(items).toHaveLength(howMany);
-      items.forEach(i => {
+      items.forEach((i) => {
         expect(i.props).toEqual({
           children: ["num", propsValues],
-          "test-id": "item"
+          "test-id": "item",
         });
       });
 
-      onUpdateSpies.forEach(onUpdate =>
+      onUpdateSpies.forEach((onUpdate) =>
         expect(onUpdate).toHaveBeenCalledTimes(0)
       );
-      renderSpies.forEach(render => expect(render).toHaveBeenCalledTimes(1));
+      renderSpies.forEach((render) => expect(render).toHaveBeenCalledTimes(1));
 
-      // create new state
+      // create createState
       const newState = {};
       for (let index = 0; index < howMany; index++) {
         newState[`newProp${index}`] = Math.random();
       }
 
       // call each setState on each state
-      return Promise.all(states.map(state => state.setState(newState))).then(
+      return Promise.all(states.map((state) => state.setState(newState))).then(
         () => {
           const t1 = performance.now();
           expect(parseInt(t1 - t0, 10)).toBeLessThan(howMany ** howMany * 4);
@@ -442,18 +370,20 @@ describe("jstates-react", () => {
             "\x1b[0m"
           );
           const items = wrapper.root.findAllByProps({ "test-id": "item" });
-          const propsValues = extractValuesFromStates(states.map(i => i.state));
-          items.forEach(i => {
+          const propsValues = extractValuesFromStates(
+            states.map((i) => i.getState())
+          );
+          items.forEach((i) => {
             expect(i.props).toEqual({
               children: ["num", propsValues],
-              "test-id": "item"
+              "test-id": "item",
             });
           });
 
-          onUpdateSpies.forEach(onUpdate =>
+          onUpdateSpies.forEach((onUpdate) =>
             expect(onUpdate).toHaveBeenCalledTimes(howMany)
           );
-          renderSpies.forEach(render =>
+          renderSpies.forEach((render) =>
             expect(render).toHaveBeenCalledTimes(howMany + 1)
           );
         }
