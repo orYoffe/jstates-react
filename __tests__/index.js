@@ -1,6 +1,6 @@
 import React from "react";
-import renderer from "react-test-renderer";
-const { createState, subscribe } = require("../index");
+import renderer, { act } from "react-test-renderer";
+const { createState, subscribe, useSubscribe } = require("../index");
 
 describe("jstates-react", () => {
   describe("State", () => {
@@ -123,135 +123,175 @@ describe("jstates-react", () => {
         ]);
       });
     });
-  });
 
-  it("integration", () => {
-    const otherprops = { other: "props" };
-    const initialState = {
-      counter: 0,
-      unrelated: "value",
-    };
-    const counterState = createState(initialState);
-    const unsubscribeSpy = jest.spyOn(counterState, "unsubscribe");
+    it("integration", () => {
+      const otherprops = { other: "props" };
+      const initialState = {
+        counter: 0,
+        unrelated: "value",
+      };
+      const counterState = createState(initialState);
+      const unsubscribeSpy = jest.spyOn(counterState, "unsubscribe");
 
-    const addOne = () =>
-      counterState.setState((state) => ({
-        counter: ++state.counter,
-      }));
-    const removeOne = () =>
-      counterState.setState((state) => ({
-        counter: --state.counter,
-      }));
+      const addOne = () =>
+        counterState.setState((state) => ({
+          counter: ++state.counter,
+        }));
+      const removeOne = () =>
+        counterState.setState((state) => ({
+          counter: --state.counter,
+        }));
 
-    let updatesCountCounter = 0;
-    function Counter() {
-      ++updatesCountCounter;
-      return (
-        <>
-          <button test-id="add" onClick={addOne}>
-            add one +
-          </button>
-          <button test-id="remove" onClick={removeOne}>
-            remove one -
-          </button>
-        </>
+      let updatesCountCounter = 0;
+      function Counter() {
+        ++updatesCountCounter;
+        return (
+          <>
+            <button test-id="add" onClick={addOne}>
+              add one +
+            </button>
+            <button test-id="remove" onClick={removeOne}>
+              remove one -
+            </button>
+          </>
+        );
+      }
+
+      let updatesCountDisplay = 0;
+      function CountDisplay({ counter }) {
+        ++updatesCountDisplay;
+        return <p test-id="count">Current counter: {counter}</p>;
+      }
+      const mapStates = (counterState) => ({
+        counter: counterState.counter,
+      });
+
+      const SubscribedCountDisplay = subscribe(
+        CountDisplay,
+        [counterState],
+        mapStates
       );
-    }
 
-    let updatesCountDisplay = 0;
-    function CountDisplay({ counter }) {
-      ++updatesCountDisplay;
-      return <p test-id="count">Current counter: {counter}</p>;
-    }
-    const mapStates = (counterState) => ({
-      counter: counterState.counter,
-    });
+      let updatesCountAlways = 0;
+      function UpdatesAlways({ states }) {
+        ++updatesCountAlways;
+        return (
+          <p test-id="always-count">Current state: {JSON.stringify(states)}</p>
+        );
+      }
+      const SubscribedUpdatesAlways = subscribe(UpdatesAlways, counterState);
 
-    const SubscribedCountDisplay = subscribe(
-      CountDisplay,
-      [counterState],
-      mapStates
-    );
+      let updatesCountApp = 0;
+      function App() {
+        ++updatesCountApp;
+        return (
+          <>
+            <SubscribedCountDisplay />
+            <Counter />
+            <SubscribedUpdatesAlways />
+          </>
+        );
+      }
 
-    let updatesCountAlways = 0;
-    function UpdatesAlways({ states }) {
-      ++updatesCountAlways;
-      return (
-        <p test-id="always-count">Current state: {JSON.stringify(states)}</p>
-      );
-    }
-    const SubscribedUpdatesAlways = subscribe(UpdatesAlways, counterState);
+      let component = renderer.create(<App {...otherprops} />);
 
-    let updatesCountApp = 0;
-    function App() {
-      ++updatesCountApp;
-      return (
-        <>
-          <SubscribedCountDisplay />
-          <Counter />
-          <SubscribedUpdatesAlways />
-        </>
-      );
-    }
+      const getElementByTestId = (id) =>
+        component.root.findByProps({ "test-id": id });
 
-    let component = renderer.create(<App {...otherprops} />);
+      const alwaysCount = getElementByTestId("always-count");
+      const count = getElementByTestId("count");
+      const add = getElementByTestId("add");
+      const remove = getElementByTestId("remove");
 
-    const getElementByTestId = (id) =>
-      component.root.findByProps({ "test-id": id });
-
-    const alwaysCount = getElementByTestId("always-count");
-    const count = getElementByTestId("count");
-    const add = getElementByTestId("add");
-    const remove = getElementByTestId("remove");
-
-    expect(updatesCountDisplay).toEqual(1);
-    expect(updatesCountCounter).toEqual(1);
-    expect(updatesCountAlways).toEqual(1);
-    expect(updatesCountApp).toEqual(1);
-    expect(count.children).toEqual(["Current counter: ", "0"]);
-    expect(alwaysCount.children).toEqual([
-      "Current state: ",
-      '{"counter":0,"unrelated":"value"}',
-    ]);
-    return add.props.onClick().then(() => {
+      expect(updatesCountDisplay).toEqual(1);
       expect(updatesCountCounter).toEqual(1);
-      expect(updatesCountAlways).toEqual(2);
-      expect(updatesCountDisplay).toEqual(2);
+      expect(updatesCountAlways).toEqual(1);
       expect(updatesCountApp).toEqual(1);
-      expect(count.children).toEqual(["Current counter: ", "1"]);
+      expect(count.children).toEqual(["Current counter: ", "0"]);
       expect(alwaysCount.children).toEqual([
         "Current state: ",
-        '{"counter":1,"unrelated":"value"}',
+        '{"counter":0,"unrelated":"value"}',
       ]);
-
-      return remove.props.onClick().then(() => {
+      return add.props.onClick().then(() => {
         expect(updatesCountCounter).toEqual(1);
-        expect(updatesCountAlways).toEqual(3);
-        expect(updatesCountDisplay).toEqual(3);
+        expect(updatesCountAlways).toEqual(2);
+        expect(updatesCountDisplay).toEqual(2);
         expect(updatesCountApp).toEqual(1);
-        expect(count.children).toEqual(["Current counter: ", "0"]);
+        expect(count.children).toEqual(["Current counter: ", "1"]);
         expect(alwaysCount.children).toEqual([
           "Current state: ",
-          '{"counter":0,"unrelated":"value"}',
+          '{"counter":1,"unrelated":"value"}',
         ]);
 
-        return counterState
-          .setState({ otherValue: "somethig different" })
-          .then(() => {
-            expect(updatesCountCounter).toEqual(1);
-            expect(updatesCountAlways).toEqual(4);
-            expect(updatesCountDisplay).toEqual(3);
-            expect(updatesCountApp).toEqual(1);
-            expect(count.children).toEqual(["Current counter: ", "0"]);
-            expect(alwaysCount.children).toEqual([
-              "Current state: ",
-              '{"counter":0,"unrelated":"value","otherValue":"somethig different"}',
-            ]);
+        return remove.props.onClick().then(() => {
+          expect(updatesCountCounter).toEqual(1);
+          expect(updatesCountAlways).toEqual(3);
+          expect(updatesCountDisplay).toEqual(3);
+          expect(updatesCountApp).toEqual(1);
+          expect(count.children).toEqual(["Current counter: ", "0"]);
+          expect(alwaysCount.children).toEqual([
+            "Current state: ",
+            '{"counter":0,"unrelated":"value"}',
+          ]);
 
-            // unmounting should unsubcscribe
-            component.update(null);
-            expect(unsubscribeSpy).toHaveBeenCalledTimes(2);
-          });
+          return counterState
+            .setState({ otherValue: "somethig different" })
+            .then(() => {
+              expect(updatesCountCounter).toEqual(1);
+              expect(updatesCountAlways).toEqual(4);
+              expect(updatesCountDisplay).toEqual(3);
+              expect(updatesCountApp).toEqual(1);
+              expect(count.children).toEqual(["Current counter: ", "0"]);
+              expect(alwaysCount.children).toEqual([
+                "Current state: ",
+                '{"counter":0,"unrelated":"value","otherValue":"somethig different"}',
+              ]);
+
+              // unmounting should unsubcscribe
+              component.update(null);
+              expect(unsubscribeSpy).toHaveBeenCalledTimes(2);
+            });
+        });
+      });
+    });
+  });
+
+  describe("useSubscribe", () => {
+    const initialState = { fake: "value" };
+    const newState = createState(initialState);
+    const otherprops = { other: "props" };
+
+    xit("should throw an error when called without a state", () => {
+      const ComponentError = () => {
+        const obj = useSubscribe();
+        return obj;
+      };
+      expect(() => ComponentError()).toThrow(
+        "useSubscribe was called without a state. It should be called like this: useSubscribe(state);"
+      );
+    });
+
+    it("subscribing and updating", () => {
+      const SubscriberComponent = () => {
+        const { fake } = useSubscribe(newState);
+        return <p>{fake}</p>;
+      };
+
+      let component;
+      act(() => {
+        component = renderer.create(<SubscriberComponent {...otherprops} />);
+      });
+
+      expect(component.root.findByType("p").children).toEqual([
+        newState.getState().fake,
+      ]);
+
+      return act(() => {
+        return newState.setState({ fake: "new value 2" });
+      }).then(() => {
+        expect(component.root.findByType("p").children).toEqual([
+          newState.getState().fake,
+        ]);
       });
     });
   });

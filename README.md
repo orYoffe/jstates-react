@@ -28,22 +28,66 @@ npm i -S jstates-react
 ## Usage
 
 ```js
-import { createState, subscribe } from "jstates-react";
+// counterState.js
+import { createState } from "jstates-react";
 
-const state = createState({ counter: 0 });
+const counterState = createState({ counter: 0 });
 
-const addOne = () => state.setState((state) => ({ counter: ++state.counter }));
-const removeOne = () =>
-  state.setState((state) => ({ counter: --state.counter }));
+export default counterState;
+
+// Counter.jsx
+import counterState from "./counterState";
 
 function Counter() {
   return (
     <div>
-      <button onClick={addOne}>add one +</button>
-      <button onClick={removeOne}>remove one -</button>
+      <button
+        onClick={() => {
+          counterState.setState(({ counter }) => ({ counter: counter + 1 }));
+        }}
+      >
+        add one +
+      </button>
+      <button
+        onClick={() => {
+          counterState.setState(({ counter }) => ({ counter: counter - 1 }));
+        }}
+      >
+        remove one -
+      </button>
+      <button
+        onClick={() => {
+          counterState.setState({ counter: 0 });
+        }}
+      >
+        reset
+      </button>
     </div>
   );
 }
+export default Counter;
+
+// App.jsx with hooks
+import { useSubscribe } from "jstates-react";
+import counterState from "./counterState";
+import Counter from "./Counter";
+
+function App() {
+  const { counter } = useSubscribe(counterState);
+  return (
+    <div>
+      <p>Current counter: {counter}</p>
+      <Counter />
+    </div>
+  );
+}
+
+export default App;
+
+// App.jsx with HOC
+import { subscribe } from "jstates-react";
+import counterState from "./counterState";
+import Counter from "./Counter";
 
 function App({ states }) {
   return (
@@ -54,15 +98,40 @@ function App({ states }) {
   );
 }
 
-export default subscribe(App, state);
+export default subscribe(App, counterState);
 ```
 
-### `subscribe` options
+### `useSubscribe` hook options
+
+`useSubscribe` should be called with one jstates state instance.
+Then would get updated whatever changes are made to the state it subscribed to
+
+```js
+const someState = createState({ userLikes: "nothing yet" });
+
+function App() {
+  const { userLikes } = useSubscribe(someState);
+
+  return (
+    <div>
+      <p>You like: {userLikes}</p>
+      <button onClick={() => someState.setState({ userLikes: "Monkeys" })}>
+        Monkeys
+      </button>
+      <button onClick={() => someState.setState({ userLikes: "Horses" })}>
+        Horses
+      </button>
+    </div>
+  );
+}
+```
+
+### HOC `subscribe` options
 
 #### Minimal requirement
 
 `subscribe` should be called with a component and a state or an array with at least one jstates state instance.
-Then would get updated whatever changes are made to the states it subscribes to
+Then would get updated whatever changes are made to the states it subscribed to
 
 ```js
 const someState = createState({});

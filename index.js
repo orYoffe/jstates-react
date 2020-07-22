@@ -1,4 +1,4 @@
-import React, { PureComponent } from "react";
+import React, { PureComponent, useState, useEffect } from "react";
 export const createState = require("jstates");
 
 export function subscribe(
@@ -69,3 +69,30 @@ export function subscribe(
     }
   };
 }
+
+export const useSubscribe = (state) => {
+  const [subscribeState, setSubscribeState] = useState(
+    state && state.getState()
+  );
+
+  useEffect(() => {
+    if (!state) {
+      throw new Error(
+        "useSubscribe was called without a state. It should be called like this: useSubscribe(state);"
+      );
+    }
+
+    const updateState = () => {
+      setSubscribeState(state.getState());
+    };
+
+    state.subscribe(updateState);
+
+    return () => {
+      state.unsubscribe(updateState);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return subscribeState;
+};
