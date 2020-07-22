@@ -7,7 +7,7 @@
   "scripts": {
     "test": "jest",
     "test-watch": "jest --watch",
-    "build": "rm -rf dist && rollup -c",
+    "build": "npx rimraf dist && rollup -c",
     "prepublishOnly": "npm run build",
     "precommit": "npm run build && npm run test"
   },
