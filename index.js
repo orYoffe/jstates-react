@@ -8,7 +8,7 @@ export function subscribe(
 ) {
   if (!Compt) {
     throw new Error(
-      "subscribe was called without a component or callback. subscribe(Component | callback, [statesToSubscribeTo], mapStatesToProps)"
+      "subscribe was called without a component. subscribe(Component, [statesToSubscribeTo], mapStatesToProps)"
     );
   }
 
@@ -17,7 +17,9 @@ export function subscribe(
       "subscribe was called without states to subscribe to. subscribe(Component, [statesToSubscribeTo], mapStatesToProps)"
     );
   }
-  const hasMultipleStates = Array.isArray(statesToSubscribeTo);
+  statesToSubscribeTo = Array.isArray(statesToSubscribeTo)
+    ? statesToSubscribeTo
+    : [statesToSubscribeTo];
 
   return class Subscribe extends PureComponent {
     constructor(props) {
@@ -25,33 +27,21 @@ export function subscribe(
 
       this.mounted = true;
       this.onUpdate = this.onUpdate.bind(this);
-      if (hasMultipleStates) {
-        statesToSubscribeTo.forEach((state) => {
-          state.subscribe(this.onUpdate);
-        });
-      } else {
-        statesToSubscribeTo.subscribe(this.onUpdate);
-      }
+      statesToSubscribeTo.forEach((state) => {
+        state.subscribe(this.onUpdate);
+      });
       this.state = this.generateState();
     }
 
     generateState() {
-      if (hasMultipleStates)
-        return mapStatesToProps(
-          ...statesToSubscribeTo.map((i) => i.getState())
-        );
-      return mapStatesToProps(statesToSubscribeTo.getState());
+      return mapStatesToProps(...statesToSubscribeTo.map((i) => i.state));
     }
 
     componentWillUnmount() {
       this.mounted = false;
-      if (hasMultipleStates) {
-        statesToSubscribeTo.forEach((state) => {
-          state.unsubscribe(this.onUpdate);
-        });
-      } else {
-        statesToSubscribeTo.unsubscribe(this.onUpdate);
-      }
+      statesToSubscribeTo.forEach((state) => {
+        state.unsubscribe(this.onUpdate);
+      });
     }
 
     onUpdate() {
@@ -70,26 +60,26 @@ export function subscribe(
   };
 }
 
-export const useSubscribe = (state) => {
+export const useSubscribe = (stateInstance) => {
   const [subscribeState, setSubscribeState] = useState(
-    state && state.getState()
+    stateInstance && stateInstance.state
   );
 
   useEffect(() => {
-    if (!state) {
+    if (!stateInstance) {
       throw new Error(
-        "useSubscribe was called without a state. It should be called like this: useSubscribe(state);"
+        "useSubscribe was called without a state. It should be called like this: useSubscribe(stateInstance);"
       );
     }
 
     const updateState = () => {
-      setSubscribeState(state.getState());
+      setSubscribeState(stateInstance.state);
     };
 
-    state.subscribe(updateState);
+    stateInstance.subscribe(updateState);
 
     return () => {
-      state.unsubscribe(updateState);
+      stateInstance.unsubscribe(updateState);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -6,18 +6,18 @@
 
 # JStates for React.js
 
-[The core JStates Library](https://github.com/orYoffe/jstates)
+A subscribe function to and a useSubscribe hook use [JStates state library](https://github.com/orYoffe/jstates)
 
-[JStates](https://github.com/orYoffe/jstates) React - A subscribe function to use [JStates](https://github.com/orYoffe/jstates) state library
-
-[codesandbox jstates-react example](https://codesandbox.io/s/jstates-react-93uhx)
+<!-- [codesandbox jstates-react example](https://codesandbox.io/s/jstates-react-93uhx) -->
 
 [![NPM](https://nodei.co/npm/jstates-react.png)](https://npmjs.org/package/jstates-react)
 
 ![GitHub issues](https://img.shields.io/github/issues/orYoffe/jstates-react.svg)
 ![license](https://img.shields.io/github/license/orYoffe/jstates-react.svg)
-![npm bundle size (minified)](https://img.shields.io/bundlephobia/min/jstates-react.svg)
+![npm bundle size](https://img.shields.io/bundlephobia/minzip/jstates-react)
 ![npm](https://img.shields.io/npm/v/jstates-react.svg)
+
+<!-- ![npm bundle size (minified)](https://img.shields.io/bundlephobia/min/jstates-react.svg) -->
 
 ## Install
 
@@ -27,6 +27,8 @@ npm i -S jstates-react
 
 ## Usage
 
+### Creating a state instance
+
 ```js
 // counterState.js
 import { createState } from "jstates-react";
@@ -34,7 +36,11 @@ import { createState } from "jstates-react";
 const counterState = createState({ counter: 0 });
 
 export default counterState;
+```
 
+### Making state changes
+
+```js
 // Counter.jsx
 import counterState from "./counterState";
 
@@ -66,7 +72,11 @@ function Counter() {
   );
 }
 export default Counter;
+```
 
+### Subscribing to state changes
+
+```js
 // App.jsx with hooks
 import { useSubscribe } from "jstates-react";
 import counterState from "./counterState";
@@ -83,7 +93,9 @@ function App() {
 }
 
 export default App;
+```
 
+```js
 // App.jsx with HOC
 import { subscribe } from "jstates-react";
 import counterState from "./counterState";
@@ -101,7 +113,7 @@ function App({ states }) {
 export default subscribe(App, counterState);
 ```
 
-### `useSubscribe` hook options
+### `useSubscribe` hook
 
 `useSubscribe` should be called with one jstates state instance.
 Then would get updated whatever changes are made to the state it subscribed to
@@ -126,7 +138,7 @@ function App() {
 }
 ```
 
-### HOC `subscribe` options
+### HOC `subscribe`
 
 #### Minimal requirement
 
