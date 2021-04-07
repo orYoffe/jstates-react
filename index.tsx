@@ -1,10 +1,14 @@
 import * as React from "react";
 import { PureComponent, useState, useEffect } from "react";
-import * as JstatesCreateState from "jstates";
-import { JState } from "jstates";
+import {
+  JState as JstateState,
+  createState as JstatesCreateState,
+  JstateInstance as JstateInstanceType,
+} from "jstates";
 
-export const createState = JstatesCreateState.default;
-export type JstateInstance = ReturnType<typeof createState>;
+export const createState = JstatesCreateState;
+export type JState = JstateState;
+export type JstateInstance = JstateInstanceType;
 type CompositeComponent = React.ComponentClass | React.FunctionComponent;
 
 export function subscribe(

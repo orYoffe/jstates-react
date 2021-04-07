@@ -3321,10 +3321,10 @@ jsprim@^1.2.2:
     json-schema "0.2.3"
     verror "1.10.0"
 
-jstates@0.5.1:
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/jstates/-/jstates-0.5.1.tgz#770ba60c26ed9443b450910fc78db701a9720de4"
-  integrity sha512-0ZtMgOZFfZBDEOkqcn2+at5GQY5NhKd3KldRqxjiLje/9/JXhodvxF3/L0FNK6Cei6ENuDZ66+BEKXiQZINldA==
+jstates@0.5.2:
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/jstates/-/jstates-0.5.2.tgz#6b544c6947f8cf1f318e2713bd8981603f52b9dd"
+  integrity sha512-a+JICimZh/LpoNYclEG1BxJzUng1ZIgERxOvZEjPZKN+cRmGyWgUtr0wh0v8uQtzJ1kX/l30snAtk4B8ILQxrw==
 
 kind-of@^3.0.2, kind-of@^3.0.3, kind-of@^3.2.0:
   version "3.2.2"

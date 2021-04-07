@@ -1,6 +1,6 @@
 {
   "name": "jstates-react",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "JStates React - A subscribe function and a useSubscribe hook to use JStates state library",
   "browser": "dist/jstates.min.js",
   "main": "dist/index.min.js",
@@ -40,7 +40,7 @@
   },
   "homepage": "https://github.com/orYoffe/jstates-react#readme",
   "dependencies": {
-    "jstates": "0.5.1"
+    "jstates": "0.5.2"
   },
   "peerDependencies": {
     "react": "*"
