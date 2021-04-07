@@ -1,12 +1,18 @@
-import React, { PureComponent, useState, useEffect } from "react";
-export const createState = require("jstates");
+import * as React from "react";
+import { PureComponent, useState, useEffect } from "react";
+import * as JstatesCreateState from "jstates";
+import { JState } from "jstates";
+
+export const createState = JstatesCreateState.default;
+export type JstateInstance = ReturnType<typeof createState>;
+type CompositeComponent = React.ComponentClass | React.FunctionComponent;
 
 export function subscribe(
-  Compt,
-  statesToSubscribeTo,
-  mapStatesToProps = (states) => ({ states })
-) {
-  if (!Compt) {
+  Component: CompositeComponent,
+  statesToSubscribeTo: JstateInstance[] | JstateInstance,
+  mapStatesToProps = (...states: JState[]) => ({ states })
+): typeof PureComponent {
+  if (!Component) {
     throw new Error(
       "subscribe was called without a component. subscribe(Component, [statesToSubscribeTo], mapStatesToProps)"
     );
@@ -17,35 +23,40 @@ export function subscribe(
       "subscribe was called without states to subscribe to. subscribe(Component, [statesToSubscribeTo], mapStatesToProps)"
     );
   }
-  statesToSubscribeTo = Array.isArray(statesToSubscribeTo)
+  const normelizedStatesToSubscribeTo: JstateInstance[] = Array.isArray(
+    statesToSubscribeTo
+  )
     ? statesToSubscribeTo
     : [statesToSubscribeTo];
 
   return class Subscribe extends PureComponent {
-    constructor(props) {
+    mounted = true;
+    state = {};
+
+    constructor(props: any) {
       super(props);
 
-      this.mounted = true;
       this.onUpdate = this.onUpdate.bind(this);
-      statesToSubscribeTo.forEach((state) => {
+      normelizedStatesToSubscribeTo.forEach((state) => {
         state.subscribe(this.onUpdate);
       });
       this.state = this.generateState();
     }
 
     generateState() {
-      return mapStatesToProps(...statesToSubscribeTo.map((i) => i.state));
+      const states = normelizedStatesToSubscribeTo.map((i) => i.state);
+      return mapStatesToProps(...states);
     }
 
     componentWillUnmount() {
       this.mounted = false;
-      statesToSubscribeTo.forEach((state) => {
+      normelizedStatesToSubscribeTo.forEach((state) => {
         state.unsubscribe(this.onUpdate);
       });
     }
 
     onUpdate() {
-      return new Promise((resolve) => {
+      return new Promise<void>((resolve) => {
         if (this.mounted) {
           this.setState(this.generateState(), resolve);
         } else {
@@ -55,12 +66,12 @@ export function subscribe(
     }
 
     render() {
-      return <Compt {...this.props} {...this.state} />;
+      return <Component {...this.props} {...this.state} />;
     }
   };
 }
 
-export const useSubscribe = (stateInstance) => {
+export const useSubscribe = (stateInstance: JstateInstance) => {
   const [subscribeState, setSubscribeState] = useState(
     stateInstance && stateInstance.state
   );

@@ -1,15 +1,16 @@
 {
   "name": "jstates-react",
-  "version": "0.4.0",
+  "version": "0.5.1",
   "description": "JStates React - A subscribe function and a useSubscribe hook to use JStates state library",
+  "browser": "dist/jstates.min.js",
   "main": "dist/index.min.js",
   "module": "dist/index.es.js",
   "scripts": {
-    "test": "jest",
+    "test": "npm run build && jest",
     "test-watch": "jest --watch",
     "build": "npx rimraf dist && rollup -c",
     "prepublishOnly": "npm run build",
-    "precommit": "npm run build && npm run test"
+    "precommit": "npm run test"
   },
   "files": [
     "dist"
@@ -39,28 +40,31 @@
   },
   "homepage": "https://github.com/orYoffe/jstates-react#readme",
   "dependencies": {
-    "jstates": "0.4.0"
+    "jstates": "0.5.1"
   },
   "peerDependencies": {
-    "react": "^16.0.0"
+    "react": "*"
   },
   "devDependencies": {
-    "@babel/core": "^7.3.3",
-    "@babel/preset-env": "^7.3.1",
-    "@babel/preset-react": "^7.0.0",
+    "@babel/core": "^7.12.9",
+    "@babel/preset-env": "^7.12.7",
+    "@babel/preset-typescript": "7.12.7",
+    "@babel/preset-react": "^7.12.7",
+    "@types/jest": "^26.0.22",
+    "@types/react": "^17.0.3",
+    "@types/react-dom": "^17.0.3",
     "babel-jest": "^24.9.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
     "babel-polyfill": "^6.26.0",
     "husky": "^3.1.0",
     "jest": "^24.9.0",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "react-test-renderer": "^16.13.1",
-    "rollup": "^1.2.2",
-    "rollup-plugin-babel": "^4.3.2",
-    "rollup-plugin-commonjs": "^10.0.1",
-    "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-replace": "^2.0.0",
-    "rollup-plugin-terser": "^5.1.2"
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-test-renderer": "^17.0.2",
+    "rollup": "^1.32.1",
+    "rollup-plugin-terser": "^7.0.2",
+    "rollup-plugin-typescript2": "^0.29.0",
+    "tslib": "^2.0.3",
+    "typescript": "^4.1.2"
   }
 }

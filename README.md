@@ -104,7 +104,7 @@ import Counter from "./Counter";
 function App({ states }) {
   return (
     <div>
-      <p>Current counter: {states.counter}</p>
+      <p>Current counter: {states[0].counter}</p>
       <Counter />
     </div>
   );

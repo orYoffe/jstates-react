@@ -9,11 +9,11 @@ module.exports = {
         modules: false,
         loose: true,
         targets: {
-          browsers: ["last 1 version"]
-        }
-      }
+          browsers: ["last 1 version"],
+        },
+      },
     ],
-    "@babel/preset-react"
+    "@babel/preset-react",
   ],
-  plugins: [cjs && "transform-es2015-modules-commonjs"].filter(Boolean)
+  plugins: [cjs && "transform-es2015-modules-commonjs"].filter(Boolean),
 };
